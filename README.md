@@ -2,8 +2,6 @@
 
 a project which renders currently playing track in your VK cover
 
-![an example of generated cover](https://i.imgur.com/SdYxY88.png "generated cover")
-
 ![an example of how generated cover looks](https://i.imgur.com/0CsQrtL.png "generated cover in vk")
 
 ## features
