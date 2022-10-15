@@ -6,6 +6,14 @@ a project which renders currently playing track in your VK cover
 
 ![an example of how generated cover looks](https://i.imgur.com/0CsQrtL.png "generated cover in vk")
 
+## features
+
+- pretty fast render time because of `skia-canvas` (~100ms if we omit the loading pictures time)
+- beautiful-looking artists with their avatars right next to them
+- it looks beautiful in general
+- it may include amount of scrobbles from last.fm if you need so
+- yes
+
 ## installation
 
 you will need node.js >=LTS & typescript ~v4.8.4 installed on your system
