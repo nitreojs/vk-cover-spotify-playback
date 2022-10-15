@@ -87,6 +87,11 @@ well you can theoretically change `WIDTH` and `HEIGHT` variables in `src/bot.ts`
 doing that since i was not properly testing the "adaptivity" of this renderer on resolutions other than 1920x640
 so please stick with 1920x640 as it is the minimum possible resolution vk requires for the cover
 
+---
+
+even though this project is published under WTFPL license please consider leaving a link to the @starkow Telegram
+channel, it means a lot to me. thanks!
+
 <div align='center'>
   <b>created by <a href="https://t.me/starkow">t.me/starkow</a></b>
 </div>
