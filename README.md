@@ -16,7 +16,7 @@ npm run build # build the project
 ## setting up `.env`
 
 in the `vk-cover-spotify-playback` folder you will find `.env.sample` file.
-you will need to fill that file before running the project itself
+you will need to rename it to `.env` and fill that file before running the project itself
 
 ### spotify
 
