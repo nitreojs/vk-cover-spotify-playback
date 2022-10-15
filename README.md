@@ -2,6 +2,8 @@
 
 a project which renders currently playing track in your VK cover
 
+![an example of generated cover](https://i.imgur.com/SdYxY88.png "generated cover")
+
 ## installation
 
 you will need node.js >=LTS & typescript ~v4.8.4 installed on your system
