@@ -71,6 +71,12 @@ and see how your vk cover has changed
 well you can do something like `crontab` for these purposes.
 do however you want to, this project is not about "how to run it" but about the rendering system
 
+### resolution other than 1920x640?
+
+well you can theoretically change `WIDTH` and `HEIGHT` variables in `src/bot.ts` file but i wouldn't recommend
+doing that since i was not properly testing the "adaptivity" of this renderer on resolutions other than 1920x640
+so please stick with 1920x640 as it is the minimum possible resolution vk requires for the cover
+
 <div align='center'>
   <b>created by <a href="https://t.me/starkow">t.me/starkow</a></b>
 </div>
