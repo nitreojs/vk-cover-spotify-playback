@@ -16,7 +16,7 @@ const spotify = new Spotify({
 const lastfm = new Lastfm({
   key: process.env.LASTFM_API_KEY as string
 })
-const isLastFmUsing = process.env.LASTFM_API_KEY?.length
+const isLastFmUsing = process.env.LASTFM_API_KEY?.length && process.env.LASTFM_USERNAME?.length
 
 const vk = new VK({
   token: process.env.VK_TOKEN as string
