@@ -226,6 +226,8 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   for (let i = 0; i < artistsData.length; i++) {
     const artist = artistsData[i]
 
+    if (!artist.image) continue
+
     const image = await loadImage(artist.image.url)
 
     const IMAGE_OFFSET_X = lastOffsetX
