@@ -1,7 +1,6 @@
 import 'dotenv/config'
 
 import { VK } from 'vk-io'
-// INFO: if you don't need lastfm info, comment this
 import { Lastfm, RecentTracks, TrackInfo } from './lastfm'
 import { render } from './renderer'
 
@@ -14,10 +13,10 @@ const spotify = new Spotify({
   refreshToken: process.env.SPOTIFY_REFRESH_TOKEN as string
 })
 
-// INFO: if you don't need lastfm info, comment this
 const lastfm = new Lastfm({
   key: process.env.LASTFM_API_KEY as string
 })
+const isLastFmUsing = process.env.LASTFM_API_KEY?.length
 
 const vk = new VK({
   token: process.env.VK_TOKEN as string
@@ -63,23 +62,24 @@ const run = async () => {
 
   deleted = false
 
-  // INFO: if you don't need lastfm info, comment this bit of code
-  /// lastfm start
-  const currentScrobblingTrackData = await lastfm.call<RecentTracks>('user.getRecentTracks', {
-    user: process.env.LASTFM_USERNAME,
-    limit: 1
-  })
+  let scrobbles: number | undefined = 0
 
-  const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
+  if (isLastFmUsing) {
+    const currentScrobblingTrackData = await lastfm.call<RecentTracks>('user.getRecentTracks', {
+      user: process.env.LASTFM_USERNAME,
+      limit: 1
+    })
 
-  const scrobblesData = await lastfm.call<TrackInfo>('track.getInfo', {
-    artist: currentScrobblingTrack.artist['#text'],
-    track: currentScrobblingTrack.name,
-    username: process.env.LASTFM_USERNAME
-  })
+    const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
 
-  const scrobbles = Number.parseInt(scrobblesData.track?.userplaycount) || undefined
-  /// lastfm end
+    const scrobblesData = await lastfm.call<TrackInfo>('track.getInfo', {
+      artist: currentScrobblingTrack.artist['#text'],
+      track: currentScrobblingTrack.name,
+      username: process.env.LASTFM_USERNAME
+    })
+
+    scrobbles = Number.parseInt(scrobblesData.track?.userplaycount) || undefined
+  }
 
   const artistIds = (data?.item as Track).artists.map(artist => artist.id).join(',')
 
@@ -90,8 +90,6 @@ const run = async () => {
   const buffer = await render({
     width: WIDTH,
     height: HEIGHT,
-    // INFO: if you don't need lastfm info, set this to 0
-    // scrobbles: 0,
     scrobbles,
     artists: artists?.artists!,
     data: data!
