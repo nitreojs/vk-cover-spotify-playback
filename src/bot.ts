@@ -62,7 +62,7 @@ const run = async () => {
 
   deleted = false
 
-  let scrobbles: number | undefined = 0
+  let scrobbles = 0
 
   if (isLastFmUsing) {
     const currentScrobblingTrackData = await lastfm.call<RecentTracks>('user.getRecentTracks', {
@@ -78,7 +78,7 @@ const run = async () => {
       username: process.env.LASTFM_USERNAME
     })
 
-    scrobbles = Number.parseInt(scrobblesData.track?.userplaycount) || undefined
+    scrobbles = Number.parseInt(scrobblesData.track?.userplaycount) ?? 0
   }
 
   const artistIds = (data?.item as Track).artists.map(artist => artist.id).join(',')
