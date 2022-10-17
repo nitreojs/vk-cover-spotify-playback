@@ -139,8 +139,7 @@ const getDeclination = (n: number, forms: [string, string, string]) => {
 interface RenderParams {
   width: number
   height: number
-
-  scrobbles?: number
+  scrobbles: number
 
   data: CurrentlyPlayingObject
   artists: Artist[]
@@ -226,6 +225,11 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   for (let i = 0; i < artistsData.length; i++) {
     const artist = artistsData[i]
 
+    // TODO: handle when there's no avatar
+    if (!artist.image) {
+      continue
+    }
+
     const image = await loadImage(artist.image.url)
 
     const IMAGE_OFFSET_X = lastOffsetX
@@ -272,7 +276,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
 
   let ADDITIONAL_TEXT = `слушаю сейчас в Spotify • ${transformDate(new Date())}`
 
-  if (scrobbles !== undefined) {
+  if (scrobbles > 0) {
     ADDITIONAL_TEXT += ` • ${scrobbles} ${getDeclination(scrobbles, ['прослушивание', 'прослушивания', 'прослушиваний'])}`
   }
 
