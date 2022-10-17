@@ -6,10 +6,11 @@ a project which renders currently playing track in your VK cover
 
 ## features
 
-- pretty fast render time because of `skia-canvas` _(~100ms if we omit the time it takes for pictures to load)_
-- beautiful-looking artists with their avatars right next to them
-- it looks beautiful in general
-- it may include amount of scrobbles from last.fm if you need so
+- pretty fast render time because of `skia-canvas` _(~100ms if we omit the time it takes for pictures to load)_;
+- beautiful-looking artists with their avatars right next to them;
+- it looks beautiful in general;
+- renders nice fallback avatar if the artist doesn't have one (it's real);
+- it may include amount of scrobbles from last.fm if you need so;
 - yes
 
 ## installation
