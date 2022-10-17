@@ -7,6 +7,7 @@ import { Artist, CurrentlyPlayingObject, Track } from './spotify'
 FontLibrary.use('SF UI', resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf'))
 
 const BLUR_PX = 48
+const FALLBACK_AVATAR_DIMENSION = 128
 
 interface RoundRectParams {
   context: CanvasRenderingContext2D
@@ -151,13 +152,11 @@ interface RenderParams {
 }
 
 const renderFallbackAvatar = (name: string, background: Image) => {
-  const SIZE = 128
-
-  const canvas = new Canvas(SIZE, SIZE)
+  const canvas = new Canvas(FALLBACK_AVATAR_DIMENSION, FALLBACK_AVATAR_DIMENSION)
   const context = canvas.getContext('2d')
 
   renderBlurredImageBackground(canvas, background)
-  renderDarkening(canvas)
+  renderDarkening(canvas, 0.4)
 
   const firstLetterCharMatch = name.match(/\p{L}/u)
 
@@ -165,9 +164,9 @@ const renderFallbackAvatar = (name: string, background: Image) => {
 
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.font = `bold ${SIZE / 2}px SF UI`
+  context.font = `bold ${FALLBACK_AVATAR_DIMENSION / 2}px SF UI`
   context.fillStyle = 'white'
-  context.fillText(character, SIZE / 2, SIZE / 2)
+  context.fillText(character, FALLBACK_AVATAR_DIMENSION / 2, FALLBACK_AVATAR_DIMENSION / 2)
 
   return canvas
 }
@@ -242,7 +241,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   context.fillText(TRACK_TEXT, TRACK_TEXT_OFFSET_X, TRACK_TEXT_OFFSET_Y, TRACK_TEXT_MAX_WIDTH)
 
   // INFO: artists & album name
-  const ARTIST_PADDING = 16 // TODO: calculate?
+  const ARTIST_PADDING = 16
 
   const artistsData = artists.map(artist => ({ name: artist.name, image: artist.images[0] }))
 
@@ -293,7 +292,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
     lastOffsetX = TEXT_OFFSET_X + TEXT_MEASUREMENT.width + ARTIST_PADDING * 3
   }
 
-  const TIME_PADDING = 16 // TODO: calculate?
+  const TIME_PADDING = 16
 
   // INFO: additional top text info
   const ADDITIONAL_TEXT_OFFSET_X = TRACK_TEXT_OFFSET_X
@@ -349,7 +348,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
 
   /// INFO: progress line (full)
   const PROGRESS_LINE_FULL_OFFSET_X = TIME_ELAPSED_OFFSET_X + TIME_PADDING + TIME_ELAPSED_TEXT_MEASUREMENT.width + TIME_PADDING
-  const PROGRESS_LINE_FULL_OFFSET_Y = TIME_ELAPSED_OFFSET_Y - TIME_PADDING * 1.3 // TODO: calculate
+  const PROGRESS_LINE_FULL_OFFSET_Y = TIME_ELAPSED_OFFSET_Y - TIME_PADDING * 1.3
   const PROGRESS_LINE_FULL_WIDTH = TIME_LEFT_OFFSET_X - TIME_ELAPSED_OFFSET_X - TIME_PADDING * 3 - TIME_LEFT_TEXT_MEASUREMENT.width * 2
   const PROGRESS_LINE_FULL_HEIGHT = TIME_ELAPSED_TEXT_MEASUREMENT.actualBoundingBoxAscent / 2
 

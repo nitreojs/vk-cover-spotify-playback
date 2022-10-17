@@ -21,12 +21,13 @@ const vk = new VK({
   token: process.env.VK_TOKEN as string
 })
 
+// INFO: was initially meant to be adaptive but i'm too stupid so this is (kinda) hardcoded
+const WIDTH = 1920
+const HEIGHT = 640
+
 const isUsingLastfm = Boolean(process.env.LASTFM_API_KEY) && Boolean(process.env.LASTFM_USERNAME)
 
 let deleted = false
-
-const WIDTH = 1920
-const HEIGHT = 640
 
 const uploadCover = (buffer: Buffer) => (
   vk.upload.conduct({
@@ -53,9 +54,9 @@ const removeCover = () => (
 )
 
 const run = async () => {
-  const data = await spotify.call<CurrentlyPlayingObject>('me/player/currently-playing')
+  const currentlyPlayingData = await spotify.call<CurrentlyPlayingObject>('me/player/currently-playing')
 
-  if (data === null && !deleted) {
+  if (currentlyPlayingData === null && !deleted) {
     deleted = true
 
     return removeCover()
@@ -65,6 +66,7 @@ const run = async () => {
 
   let scrobbles = 0
 
+  // INFO: parse scrobbles only if we have lastfm account info
   if (isUsingLastfm) {
     const currentScrobblingTrackData = await lastfm.call<RecentTracks>('user.getRecentTracks', {
       user: process.env.LASTFM_USERNAME,
@@ -82,7 +84,7 @@ const run = async () => {
     scrobbles = Number.parseInt(scrobblesData.track?.userplaycount) ?? 0
   }
 
-  const artistIds = (data?.item as Track).artists.map(artist => artist.id).join(',')
+  const artistIds = (currentlyPlayingData?.item as Track).artists.map(artist => artist.id).join(',')
 
   const artists = await spotify.call<ArtistsResponse>('artists', {
     ids: artistIds
@@ -92,13 +94,14 @@ const run = async () => {
     width: WIDTH,
     height: HEIGHT,
     scrobbles,
-    artists: artists?.artists!,
-    data: data!
+    artists: artists?.artists!, // artists? artists!
+    data: currentlyPlayingData!
   })
 
   return uploadCover(buffer)
 }
 
+// INFO: called when captcha occurs
 vk.callbackService.onCaptcha(async (captcha, retry) => {
   // insert captcha handler here
 })
