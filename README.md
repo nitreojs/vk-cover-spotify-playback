@@ -48,7 +48,7 @@ you will need to rename it to `.env` and fill that file before running the proje
 
 ### lastfm
 
-if you don't need lastfm info, open `src/bot.ts` file and comment everything it tells you to comment
+> skip this if you don't use lastfm
 
 1. [create an API account](https://www.last.fm/api/account/create) and get API key
 2. paste it into `LASTFM_API_KEY`
