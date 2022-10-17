@@ -255,21 +255,21 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
 
     const hasImage = artist.image !== undefined
 
-    let image: CanvasImageSource
+    let artistImage: CanvasImageSource
 
     if (hasImage) {
-      image = await loadImage(artist.image.url)
+      artistImage = await loadImage(artist.image.url)
     } else {
-      image = renderFallbackAvatar(artist.name, backgroundImage)
+      artistImage = renderFallbackAvatar(artist.name, backgroundImage)
     }
 
     const IMAGE_OFFSET_X = lastOffsetX
     const IMAGE_OFFSET_Y = TRACK_TEXT_OFFSET_Y + 8
 
     context.shadowColor = 'rgb(0, 0, 0, 0.5)'
-    context.shadowBlur = image.height / 20
+    context.shadowBlur = artistImage.height / 20
 
-    renderRoundRectImage(canvas, image, {
+    renderRoundRectImage(canvas, artistImage, {
       dx: IMAGE_OFFSET_X, dy: IMAGE_OFFSET_Y,
       dw: 64, dh: 64,
       radius: 8, fill: hasImage
@@ -305,11 +305,16 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   context.textAlign = 'left'
   context.textBaseline = 'top'
 
-  let ADDITIONAL_TEXT = `слушаю сейчас в Spotify • ${transformDate(new Date())}`
+  const ADDITIONAL_TEXT_PARTS: string[] = [
+    'слушаю сейчас в Spotify',
+    transformDate(new Date())
+  ]
 
   if (scrobbles > 0) {
-    ADDITIONAL_TEXT += ` • ${scrobbles} ${getDeclination(scrobbles, ['прослушивание', 'прослушивания', 'прослушиваний'])}`
+    ADDITIONAL_TEXT_PARTS.push(`${scrobbles} ${getDeclination(scrobbles, ['прослушивание', 'прослушивания', 'прослушиваний'])}`)
   }
+
+  const ADDITIONAL_TEXT = ADDITIONAL_TEXT_PARTS.join(' • ')
 
   context.fillText(ADDITIONAL_TEXT, ADDITIONAL_TEXT_OFFSET_X, ADDITIONAL_TEXT_OFFSET_Y)
 
