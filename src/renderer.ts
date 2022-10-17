@@ -156,7 +156,7 @@ const renderFallbackAvatar = (name: string, background: Image) => {
   const context = canvas.getContext('2d')
 
   renderBlurredImageBackground(canvas, background)
-  renderDarkening(canvas, 0.4)
+  renderDarkening(canvas)
 
   const firstLetterCharMatch = name.match(/\p{L}/u)
 
