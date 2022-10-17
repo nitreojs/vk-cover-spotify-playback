@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 
-import { Canvas, CanvasRenderingContext2D, FontLibrary, Image, loadImage } from 'skia-canvas'
+import { Canvas, CanvasImageSource, CanvasRenderingContext2D, FontLibrary, Image, loadImage } from 'skia-canvas'
 
 import { Artist, CurrentlyPlayingObject, Track } from './spotify'
 
@@ -51,7 +51,7 @@ interface RenderRoundRectImageParams {
   fill?: boolean
 }
 
-const renderRoundRectImage = (canvas: Canvas, image: Image, {
+const renderRoundRectImage = (canvas: Canvas, image: CanvasImageSource, {
   dx,
   dy,
   dw,
@@ -65,7 +65,12 @@ const renderRoundRectImage = (canvas: Canvas, image: Image, {
 
   roundRect({ context, dx, dy, dw, dh, radius, fill })
   context.clip()
-  context.drawImage(image, dx, dy, dw, dh)
+
+  if (image instanceof Canvas) {
+    context.drawCanvas(image, dx, dy, dw, dh)
+  } else {
+    context.drawImage(image, dx, dy, dw, dh)
+  }
 
   context.restore()
 }
@@ -91,11 +96,11 @@ const renderBlurredImageBackground = (canvas: Canvas, image: Image) => {
   )
 }
 
-const renderDarkening = (canvas: Canvas) => {
+const renderDarkening = (canvas: Canvas, alpha = 0.3) => {
   const context = canvas.getContext('2d')
 
   context.filter = 'none'
-  context.fillStyle = 'rgb(0, 0, 0, 0.3)'
+  context.fillStyle = `rgb(0, 0, 0, ${alpha})`
   context.fillRect(0, 0, canvas.width, canvas.height)
 }
 
@@ -145,6 +150,28 @@ interface RenderParams {
   artists: Artist[]
 }
 
+const renderFallbackAvatar = (name: string, background: Image) => {
+  const SIZE = 128
+
+  const canvas = new Canvas(SIZE, SIZE)
+  const context = canvas.getContext('2d')
+
+  renderBlurredImageBackground(canvas, background)
+  renderDarkening(canvas)
+
+  const firstLetterCharMatch = name.match(/\p{L}/u)
+
+  const character = (firstLetterCharMatch !== null ? firstLetterCharMatch[0] : name[0]).toUpperCase()
+
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.font = `bold ${SIZE / 2}px SF UI`
+  context.fillStyle = 'white'
+  context.fillText(character, SIZE / 2, SIZE / 2)
+
+  return canvas
+}
+
 export const render = async ({ data, width, height, scrobbles, artists }: RenderParams) => {
   const canvas = new Canvas(width, height)
   const context = canvas.getContext('2d')
@@ -155,27 +182,27 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   const trackImage = item.album.images[0]
   const imageUrl = trackImage.url
 
-  const image = await loadImage(imageUrl)
+  const backgroundImage = await loadImage(imageUrl)
 
   // INFO: background
-  renderBlurredImageBackground(canvas, image)
+  renderBlurredImageBackground(canvas, backgroundImage)
   renderDarkening(canvas)
 
   // INFO: track (album) image
-  const widthMultiplier = canvas.width / image.width
-  const heightMultiplier = canvas.height / image.height
+  const widthMultiplier = canvas.width / backgroundImage.width
+  const heightMultiplier = canvas.height / backgroundImage.height
 
   const IMAGE_OFFSET_RATIO = 2
   const IMAGE_OFFSET = canvas.height / (2 + IMAGE_OFFSET_RATIO)
 
-  const canvasOrImageMaxHeight = Math.max(image.height, canvas.height)
+  const canvasOrImageMaxHeight = Math.max(backgroundImage.height, canvas.height)
 
-  const IMAGE_DW = image.width * heightMultiplier - IMAGE_OFFSET * 2
+  const IMAGE_DW = backgroundImage.width * heightMultiplier - IMAGE_OFFSET * 2
   const IMAGE_DH = canvasOrImageMaxHeight - IMAGE_OFFSET * 2
 
   context.shadowColor = 'black'
-  context.shadowBlur = image.height / 20
-  renderRoundRectImage(canvas, image, {
+  context.shadowBlur = backgroundImage.height / 20
+  renderRoundRectImage(canvas, backgroundImage, {
     dx: IMAGE_OFFSET, dy: IMAGE_OFFSET,
     dw: IMAGE_DW, dh: IMAGE_DH,
     radius: 32, fill: true
@@ -202,7 +229,6 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   let hadToTruncate = false
 
   // TODO: one very long word
-
   while (TRACK_TEXT_MEASUREMENT.width > TRACK_TEXT_MAX_WIDTH) {
     hadToTruncate = true
 
@@ -222,15 +248,21 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
 
   let lastOffsetX = TRACK_TEXT_OFFSET_X
 
+  context.shadowBlur = 0
+  context.shadowColor = 'none'
+
   for (let i = 0; i < artistsData.length; i++) {
     const artist = artistsData[i]
 
-    // TODO: handle when there's no avatar
-    if (!artist.image) {
-      continue
-    }
+    const hasImage = artist.image !== undefined
 
-    const image = await loadImage(artist.image.url)
+    let image: CanvasImageSource
+
+    if (hasImage) {
+      image = await loadImage(artist.image.url)
+    } else {
+      image = renderFallbackAvatar(artist.name, backgroundImage)
+    }
 
     const IMAGE_OFFSET_X = lastOffsetX
     const IMAGE_OFFSET_Y = TRACK_TEXT_OFFSET_Y + 8
@@ -241,7 +273,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
     renderRoundRectImage(canvas, image, {
       dx: IMAGE_OFFSET_X, dy: IMAGE_OFFSET_Y,
       dw: 64, dh: 64,
-      radius: 8, fill: true
+      radius: 8, fill: hasImage
     })
 
     const TEXT_OFFSET_X = lastOffsetX + 64 + ARTIST_PADDING

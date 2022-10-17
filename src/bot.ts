@@ -16,11 +16,12 @@ const spotify = new Spotify({
 const lastfm = new Lastfm({
   key: process.env.LASTFM_API_KEY as string
 })
-const isLastFmUsing = Boolean(process.env.LASTFM_API_KEY) && Boolean(process.env.LASTFM_USERNAME)
 
 const vk = new VK({
   token: process.env.VK_TOKEN as string
 })
+
+const isUsingLastfm = Boolean(process.env.LASTFM_API_KEY) && Boolean(process.env.LASTFM_USERNAME)
 
 let deleted = false
 
@@ -64,7 +65,7 @@ const run = async () => {
 
   let scrobbles = 0
 
-  if (isLastFmUsing) {
+  if (isUsingLastfm) {
     const currentScrobblingTrackData = await lastfm.call<RecentTracks>('user.getRecentTracks', {
       user: process.env.LASTFM_USERNAME,
       limit: 1
