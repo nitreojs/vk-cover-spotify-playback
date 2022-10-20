@@ -1,9 +1,14 @@
 import 'dotenv/config'
-import express from 'express'
+import env from 'env-var'
 
+import express from 'express'
 import { randomBytes } from 'node:crypto'
 
 import { fetch } from 'undici'
+
+const SPOTIFY_CLIENT_ID = env.get('SPOTIFY_CLIENT_ID').required().asString()
+const SPOTIFY_REDIRECT_URI = env.get('SPOTIFY_REDIRECT_URI').required().asString()
+const SPOTIFY_CLIENT_SECRET = env.get('SPOTIFY_CLIENT_SECRET').required().asString()
 
 const app = express()
 
@@ -13,8 +18,8 @@ app.get('/login', (req, res) => {
   return res.redirect('https://accounts.spotify.com/authorize?' +
     new URLSearchParams({
       response_type: 'code',
-      client_id: process.env.SPOTIFY_CLIENT_ID as string,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string,
+      client_id: SPOTIFY_CLIENT_ID,
+      redirect_uri: SPOTIFY_REDIRECT_URI,
       state,
       scope: 'user-read-currently-playing user-read-playback-state user-read-recently-played user-library-read'
     })
@@ -35,13 +40,13 @@ app.use('/spotify', async (req, res) => {
   const response = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
-      authorization: `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
+      authorization: `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
       'content-type': 'application/x-www-form-urlencoded'
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code: code as string,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string
+      redirect_uri: SPOTIFY_REDIRECT_URI
     })
   })
 

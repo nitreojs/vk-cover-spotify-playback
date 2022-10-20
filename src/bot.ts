@@ -1,5 +1,7 @@
 import 'dotenv/config'
 
+import env from 'env-var'
+
 import { VK } from 'vk-io'
 
 import { HEIGHT, WIDTH } from './constants'
@@ -8,24 +10,30 @@ import { Lastfm, RecentTracks, TrackInfo } from './lastfm'
 import { render } from './renderer'
 import { ArtistsResponse, CurrentlyPlayingObject, Spotify, Track } from './spotify'
 
-const spotify = new Spotify({
-  accessToken: process.env.SPOTIFY_ACCESS_TOKEN as string,
-  clientId: process.env.SPOTIFY_CLIENT_ID as string,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET as string,
-  refreshToken: process.env.SPOTIFY_REFRESH_TOKEN as string
-})
+const SPOTIFY_ACCESS_TOKEN = env.get('SPOTIFY_ACCESS_TOKEN').required().asString()
+const SPOTIFY_CLIENT_ID = env.get('SPOTIFY_CLIENT_ID').required().asString()
+const SPOTIFY_CLIENT_SECRET = env.get('SPOTIFY_CLIENT_SECRET').required().asString()
+const SPOTIFY_REFRESH_TOKEN = env.get('SPOTIFY_REFRESH_TOKEN').required().asString()
 
-const lastfm = new Lastfm({
-  key: process.env.LASTFM_API_KEY as string
+const LASTFM_API_KEY = env.get('LASTFM_API_KEY').asString()
+const LASTFM_USERNAME = env.get('LASTFM_USERNAME').asString()
+
+const VK_TOKEN = env.get('VK_TOKEN').required().asString()
+
+const spotify = new Spotify({
+  accessToken: SPOTIFY_ACCESS_TOKEN,
+  clientId: SPOTIFY_CLIENT_ID,
+  clientSecret: SPOTIFY_CLIENT_SECRET,
+  refreshToken: SPOTIFY_REFRESH_TOKEN
 })
 
 const vk = new VK({
-  token: process.env.VK_TOKEN as string
+  token: VK_TOKEN
 })
 
-const isUsingLastfm = Boolean(process.env.LASTFM_API_KEY) && Boolean(process.env.LASTFM_USERNAME)
+const isUsingLastfm = LASTFM_API_KEY !== undefined && LASTFM_USERNAME !== undefined
 
-let deleted = false
+let deletedCover = false
 
 const uploadCover = (buffer: Buffer) => (
   vk.upload.conduct({
@@ -54,20 +62,24 @@ const removeCover = () => (
 const run = async () => {
   const currentlyPlayingData = await spotify.call<CurrentlyPlayingObject>('me/player/currently-playing')
 
-  if (currentlyPlayingData === null && !deleted) {
-    deleted = true
+  if (currentlyPlayingData === null && !deletedCover) {
+    deletedCover = true
 
     return removeCover()
   }
 
-  deleted = false
+  deletedCover = false
 
   let scrobbles = 0
 
   // INFO: parse scrobbles only if we have lastfm account info
   if (isUsingLastfm) {
+    const lastfm = new Lastfm({
+      key: LASTFM_API_KEY
+    })
+
     const currentScrobblingTrackData = await lastfm.call<RecentTracks>('user.getRecentTracks', {
-      user: process.env.LASTFM_USERNAME,
+      user: LASTFM_USERNAME,
       limit: 1
     })
 
@@ -76,7 +88,7 @@ const run = async () => {
     const scrobblesData = await lastfm.call<TrackInfo>('track.getInfo', {
       artist: currentScrobblingTrack.artist['#text'],
       track: currentScrobblingTrack.name,
-      username: process.env.LASTFM_USERNAME
+      username: LASTFM_USERNAME
     })
 
     scrobbles = Number.parseInt(scrobblesData.track?.userplaycount) ?? 0
