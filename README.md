@@ -6,7 +6,8 @@ a project which renders currently playing track in your VK cover
 
 ## features
 
-- pretty fast render time because of `skia-canvas` _(~100ms if we omit the time it takes for pictures to load)_;
+- pretty fast render time because `skia-canvas` _(from `20`ms up to `50`ms if we omit the time it takes for pictures to
+  load)_;
 - beautiful-looking artists with their avatars right next to them;
 - it looks beautiful in general;
 - renders nice fallback avatar if the artist doesn't have one (it's real);
@@ -15,7 +16,7 @@ a project which renders currently playing track in your VK cover
 
 ## installation
 
-you will need node.js >=LTS & typescript ~v4.8.4 installed on your system
+you will need node.js >=LTS & typescript ~v4.8.4 installed on your system i think
 
 ```shell
 git clone https://github.com/nitreojs/vk-cover-spotify-playback.git # cloning repository
