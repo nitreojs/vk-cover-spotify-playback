@@ -1,187 +1,53 @@
 import { resolve } from 'node:path'
 
-import { Canvas, CanvasImageSource, CanvasRenderingContext2D, FontLibrary, Image, loadImage } from 'skia-canvas'
+import { Canvas, CanvasImageSource, FontLibrary, loadImage } from 'skia-canvas'
 
-import { Artist, CurrentlyPlayingObject, Track } from './spotify'
+import { getDeclination, transformDate, transformTime } from '../utils'
+
+import {
+  renderBlurredImageBackground,
+  renderDarkening,
+  renderFallbackAvatar,
+  renderRoundRectImage,
+  roundRect
+} from './utils'
 
 FontLibrary.use('SF UI', resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf'))
 
-const BLUR_PX = 48
-const FALLBACK_AVATAR_DIMENSION = 128
-
-interface RoundRectParams {
-  context: CanvasRenderingContext2D
-  dx: number
-  dy: number
-  dw: number
-  dh: number
-  radius: number
-  fill?: boolean
-}
-
-const roundRect = ({ context, dx, dy, dw, dh, radius, fill = false }: RoundRectParams) => {
-  if (dw < 2 * radius) {
-    radius = dw / 2
-  }
-
-  if (dh < 2 * radius) {
-    radius = dh / 2
-  }
-
-  context.beginPath()
-  context.moveTo(dx + radius, dy)
-
-  context.arcTo(dx + dw, dy, dx + dw, dy + dh, radius)
-  context.arcTo(dx + dw, dy + dh, dx, dy + dh, radius)
-  context.arcTo(dx, dy + dh, dx, dy, radius)
-  context.arcTo(dx, dy, dx + dw, dy, radius)
-
-  if (fill) {
-    context.fill()
-  }
-
-  context.closePath()
-}
-
-interface RenderRoundRectImageParams {
-  dx: number
-  dy: number
-  dw: number
-  dh: number
-  radius: number
-  fill?: boolean
-}
-
-const renderRoundRectImage = (canvas: Canvas, image: CanvasImageSource, {
-  dx,
-  dy,
-  dw,
-  dh,
-  radius,
-  fill
-}: RenderRoundRectImageParams) => {
-  const context = canvas.getContext('2d')
-
-  context.save()
-
-  roundRect({ context, dx, dy, dw, dh, radius, fill })
-  context.clip()
-
-  if (image instanceof Canvas) {
-    context.drawCanvas(image, dx, dy, dw, dh)
-  } else {
-    context.drawImage(image, dx, dy, dw, dh)
-  }
-
-  context.restore()
-}
-
-const renderBlurredImageBackground = (canvas: Canvas, image: Image) => {
-  const context = canvas.getContext('2d')
-
-  const imageMinDimension = Math.min(image.width, image.height)
-  const canvasMaxDimension = Math.max(canvas.width, canvas.height)
-
-  const offset = BLUR_PX * 2
-
-  const multiplier = (offset + canvasMaxDimension) / imageMinDimension
-  const [iw, ih] = [image.width * multiplier, image.height * multiplier]
-
-  const IMAGE_X = (canvas.width - iw) / 2
-  const IMAGE_Y = (canvas.height - ih) / 2
-
-  context.filter = `blur(${BLUR_PX}px)`
-  context.drawImage(image,
-    IMAGE_X, IMAGE_Y,
-    iw, ih
-  )
-}
-
-const renderDarkening = (canvas: Canvas, alpha = 0.3) => {
-  const context = canvas.getContext('2d')
-
-  context.filter = 'none'
-  context.fillStyle = `rgb(0, 0, 0, ${alpha})`
-  context.fillRect(0, 0, canvas.width, canvas.height)
-}
-
-const transformTime = (ms: number) => {
-  let seconds = Math.round(ms / 1000)
-  const minutes = Math.floor(seconds / 60)
-
-  seconds -= 60 * minutes
-
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
-
-const pad = (value: any) => String(value).padStart(2, '0')
-
-const transformDate = (date: Date) => {
-  const day = pad(date.getDate())
-  const month = pad(date.getMonth() + 1)
-  const year = date.getFullYear()
-
-  const hours = pad(date.getHours())
-  const minutes = pad(date.getMinutes())
-
-  return `${day}.${month}.${year} ${hours}:${minutes}`
-}
-
-const getDeclination = (n: number, forms: [string, string, string]) => {
-  const pr = new Intl.PluralRules('ru-RU')
-  const rule = pr.select(n)
-
-  if (rule === 'one') {
-    return forms[0]
-  }
-
-  if (rule === 'few') {
-    return forms[1]
-  }
-
-  return forms[2]
-}
-
-interface RenderParams {
+export interface RenderParams {
   width: number
   height: number
   scrobbles: number
 
-  data: CurrentlyPlayingObject
-  artists: Artist[]
+  data: Record<string, any>
+  artists: Record<string, any>[]
 }
 
-const renderFallbackAvatar = (name: string, background: Image) => {
-  const canvas = new Canvas(FALLBACK_AVATAR_DIMENSION, FALLBACK_AVATAR_DIMENSION)
-  const context = canvas.getContext('2d')
-
-  renderBlurredImageBackground(canvas, background)
-  renderDarkening(canvas)
-
-  const firstLetterCharMatch = name.match(/\p{L}/u)
-
-  const character = (firstLetterCharMatch !== null ? firstLetterCharMatch[0] : name[0]).toUpperCase()
-
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.font = `bold ${FALLBACK_AVATAR_DIMENSION / 2}px SF UI`
-  context.fillStyle = 'white'
-  context.fillText(character, FALLBACK_AVATAR_DIMENSION / 2, FALLBACK_AVATAR_DIMENSION / 2)
-
-  return canvas
+export interface RenderResponseRenderTime {
+  total: number
+  withoutImageLoading: number
 }
 
-export const render = async ({ data, width, height, scrobbles, artists }: RenderParams) => {
+export interface RenderResponse {
+  buffer: Buffer
+  renderTime: RenderResponseRenderTime
+}
+
+export const render = async ({ data, width, height, scrobbles, artists }: RenderParams): Promise<RenderResponse> => {
   const canvas = new Canvas(width, height)
   const context = canvas.getContext('2d')
 
   const currentlyPlaying = data!
-  const item = currentlyPlaying.item as Track
+  const item = currentlyPlaying.item
 
   const trackImage = item.album.images[0]
   const imageUrl = trackImage.url
 
   const backgroundImage = await loadImage(imageUrl)
+
+  // INFO: calculating how much time did it take to render this picture
+  let renderStart = Date.now()
+  let tookTimeLoadingImages = 0
 
   // INFO: background
   renderBlurredImageBackground(canvas, backgroundImage)
@@ -257,11 +123,18 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
 
     let artistImage: CanvasImageSource
 
+    const loadArtistImageStart = Date.now()
+
     if (hasImage) {
       artistImage = await loadImage(artist.image.url)
     } else {
       artistImage = renderFallbackAvatar(artist.name, backgroundImage)
     }
+
+    const loadArtistImageEnd = Date.now()
+    const loadArtistImageTook = loadArtistImageEnd - loadArtistImageStart
+
+    tookTimeLoadingImages += loadArtistImageTook
 
     const IMAGE_OFFSET_X = lastOffsetX
     const IMAGE_OFFSET_Y = TRACK_TEXT_OFFSET_Y + 8
@@ -380,5 +253,18 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
     radius: 20, fill: true
   })
 
-  return canvas.jpg
+  const renderEnd = Date.now()
+
+  const renderTookRaw = renderEnd - renderStart
+  const renderTookOptimized = renderTookRaw - tookTimeLoadingImages
+
+  const buffer = await canvas.jpg
+
+  return {
+    buffer,
+    renderTime: {
+      total: renderTookRaw,
+      withoutImageLoading: renderTookOptimized
+    }
+  }
 }

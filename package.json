@@ -1,14 +1,12 @@
 {
   "name": "vk-cover-spotify-playback",
   "version": "1.0.0",
-  "description": "",
   "main": "dist/bot.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node .",
     "server": "node dist/spotify/server.js"
   },
-  "keywords": [],
   "author": "starkow",
   "license": "WTFPL",
   "dependencies": {

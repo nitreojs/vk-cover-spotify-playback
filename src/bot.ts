@@ -1,9 +1,11 @@
 import 'dotenv/config'
 
 import { VK } from 'vk-io'
+
+import { HEIGHT, WIDTH } from './constants'
+
 import { Lastfm, RecentTracks, TrackInfo } from './lastfm'
 import { render } from './renderer'
-
 import { ArtistsResponse, CurrentlyPlayingObject, Spotify, Track } from './spotify'
 
 const spotify = new Spotify({
@@ -20,10 +22,6 @@ const lastfm = new Lastfm({
 const vk = new VK({
   token: process.env.VK_TOKEN as string
 })
-
-// INFO: was initially meant to be adaptive but i'm too stupid so this is (kinda) hardcoded
-const WIDTH = 1920
-const HEIGHT = 640
 
 const isUsingLastfm = Boolean(process.env.LASTFM_API_KEY) && Boolean(process.env.LASTFM_USERNAME)
 
@@ -90,7 +88,7 @@ const run = async () => {
     ids: artistIds
   })
 
-  const buffer = await render({
+  const { buffer } = await render({
     width: WIDTH,
     height: HEIGHT,
     scrobbles,
@@ -100,10 +98,5 @@ const run = async () => {
 
   return uploadCover(buffer)
 }
-
-// INFO: called when captcha occurs
-vk.callbackService.onCaptcha(async (captcha, retry) => {
-  // insert captcha handler here
-})
 
 run().catch(console.error)
