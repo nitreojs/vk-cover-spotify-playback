@@ -12,6 +12,7 @@ a project which renders currently playing track in your VK cover
 - it looks beautiful in general;
 - renders nice fallback avatar if the artist doesn't have one (it's real);
 - it may include amount of scrobbles from last.fm if you need so;
+- it may broadcast currently playing track in your status if you want so;
 - yes
 
 ## installation
@@ -44,13 +45,18 @@ you will need to rename it to `.env` and fill that file before running the proje
 
 1. go to [vkhost](https://vkhost.github.io)
 2. click on `Настройки »`
-3. remove all rights except for `Фотографии` (third one) and `Доступ в любое время` (number 15)
+3. remove all rights except:
+    - `Photos` (`Фотографии`), #3;
+    - `Audio` (`Аудиозаписи`), #4 — _only if you are going to broadcast currently playing tracks in your status_;
+    - `Access at any time` (`Доступ в любое время`), #15.
 4. click on `Получить` & click `Allow`
 5. copy `access_token` from the search bar into `VK_TOKEN`
 
 ### lastfm
 
 > skip this if you don't use lastfm
+
+> requires `use_lastfm` to be `true` in `settings.json`
 
 1. [create an API account](https://www.last.fm/api/account/create) and get API key
 2. paste it into `LASTFM_API_KEY`
@@ -67,6 +73,14 @@ to find them, proceed to do next steps
 3. paste `.otf` files in here
 
 if you are going to use `.ttf` files then you will have to edit line 7 in `src/renderer.ts` file
+
+## `settings.json`
+
+there is a `settings.json` file in the root folder, it tells the script whether you want to enable or disable some
+features.
+
+- `use_lastfm`: `true` if you want to render scrobbles, `false` otherwise. default: `true`;
+- `broadcast_track_in_vk`: `true` if you are want to broadcast currently playing track in your status. default: `false`.
 
 ## running script
 
