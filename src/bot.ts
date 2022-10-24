@@ -2,13 +2,14 @@ import 'dotenv/config'
 
 import env from 'env-var'
 
-import { VK } from 'vk-io'
+import settings from '../settings.json'
 
 import { HEIGHT, WIDTH } from './constants'
 
 import { Lastfm, RecentTracks, TrackInfo } from './lastfm'
 import { render } from './renderer'
 import { ArtistsResponse, CurrentlyPlayingObject, Spotify, Track } from './spotify'
+import { getTrackId, removeBroadcastingTrack, removeCover, setBroadcastingTrack, uploadCover } from './vk'
 
 const SPOTIFY_ACCESS_TOKEN = env.get('SPOTIFY_ACCESS_TOKEN').required().asString()
 const SPOTIFY_CLIENT_ID = env.get('SPOTIFY_CLIENT_ID').required().asString()
@@ -18,8 +19,6 @@ const SPOTIFY_REFRESH_TOKEN = env.get('SPOTIFY_REFRESH_TOKEN').required().asStri
 const LASTFM_API_KEY = env.get('LASTFM_API_KEY').asString()
 const LASTFM_USERNAME = env.get('LASTFM_USERNAME').asString()
 
-const VK_TOKEN = env.get('VK_TOKEN').required().asString()
-
 const spotify = new Spotify({
   accessToken: SPOTIFY_ACCESS_TOKEN,
   clientId: SPOTIFY_CLIENT_ID,
@@ -27,37 +26,13 @@ const spotify = new Spotify({
   refreshToken: SPOTIFY_REFRESH_TOKEN
 })
 
-const vk = new VK({
-  token: VK_TOKEN
-})
+const lastfmDataFound = LASTFM_API_KEY !== undefined && LASTFM_USERNAME !== undefined
 
-const isUsingLastfm = LASTFM_API_KEY !== undefined && LASTFM_USERNAME !== undefined
+if (settings.use_lastfm && !lastfmDataFound) {
+  throw new TypeError('specified `"use_lastfm": true` but either API key or username are missing')
+}
 
 let deletedCover = false
-
-const uploadCover = (buffer: Buffer) => (
-  vk.upload.conduct({
-    field: 'photo',
-    params: {
-      source: { value: buffer },
-      crop_x: '',
-      crop_width: WIDTH,
-      crop_y: '',
-      crop_height: HEIGHT
-    },
-
-    getServer: vk.api.photos.getOwnerCoverPhotoUploadServer,
-    saveFiles: vk.api.photos.saveOwnerCoverPhoto,
-    serverParams: ['crop_x', 'crop_height', 'crop_y', 'crop_width'],
-
-    maxFiles: 1,
-    attachmentType: 'photo'
-  })
-)
-
-const removeCover = () => (
-  vk.api.call('photos.removeOwnerCoverPhoto', {})
-)
 
 const run = async () => {
   const currentlyPlayingData = await spotify.call<CurrentlyPlayingObject>('me/player/currently-playing')
@@ -68,12 +43,14 @@ const run = async () => {
     return removeCover()
   }
 
+  const item = currentlyPlayingData?.item as Track
+
   deletedCover = false
 
   let scrobbles = 0
 
   // INFO: parse scrobbles only if we have lastfm account info
-  if (isUsingLastfm) {
+  if (lastfmDataFound) {
     const lastfm = new Lastfm({
       key: LASTFM_API_KEY
     })
@@ -94,7 +71,19 @@ const run = async () => {
     scrobbles = Number.parseInt(scrobblesData.track?.userplaycount) ?? 0
   }
 
-  const artistIds = (currentlyPlayingData?.item as Track).artists.map(artist => artist.id).join(',')
+  const artistIds = item.artists.map(artist => artist.id).join(',')
+  const artistNames = item.artists.map(artist => artist.name).join(', ')
+
+  // INFO: broadcast track into a status only if the setting is turned on
+  if (settings.broadcast_track_in_vk) {
+    const trackId = await getTrackId(artistNames, item.name)
+
+    if (trackId !== undefined) {
+      await setBroadcastingTrack(trackId)
+    } else {
+      await removeBroadcastingTrack()
+    }
+  }
 
   const artists = await spotify.call<ArtistsResponse>('artists', {
     ids: artistIds
