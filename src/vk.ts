@@ -49,11 +49,10 @@ export const getTrackId = async (artist: string, name: string) => {
     return undefined
   }
 
-  const possibleTrack = items[0]
+  // INFO: previous `toLowerCase` check failed if Spotify <-> VK track names were different
+  // INFO: e.g. for feats, so we're now just returning the first one hoping it's the one we're looking for
 
-  if (possibleTrack.artist.toLowerCase() === artist.toLowerCase() && possibleTrack.title.toLowerCase() === name.toLowerCase()) {
-    return `${possibleTrack.owner_id}_${possibleTrack.id}`
-  }
+  const track = items[0]
 
-  return undefined
+  return `${track.owner_id}_${track.id}`
 }
