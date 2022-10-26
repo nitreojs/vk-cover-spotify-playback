@@ -1,3 +1,4 @@
+import createDebug from 'debug'
 import 'dotenv/config'
 
 import env from 'env-var'
@@ -11,6 +12,10 @@ import { Lastfm, RecentTracks, TrackInfo } from './lastfm'
 import { render } from './renderer'
 import { ArtistsResponse, CurrentlyPlayingObject, Spotify, Track } from './spotify'
 import { getTrackId, removeBroadcastingTrack, removeCover, setBroadcastingTrack, uploadCover } from './vk'
+
+const debug_vk = createDebug('vk-cover:vk')
+const debug_spotify = createDebug('vk-cover:spotify')
+const debug_renderer = createDebug('vk-cover:renderer')
 
 const SPOTIFY_ACCESS_TOKEN = env.get('SPOTIFY_ACCESS_TOKEN').required().asString()
 const SPOTIFY_CLIENT_ID = env.get('SPOTIFY_CLIENT_ID').required().asString()
@@ -37,6 +42,8 @@ const run = async () => {
   const currentlyPlayingData = await spotify.call<CurrentlyPlayingObject>('me/player/currently-playing')
 
   if (currentlyPlayingData === null) {
+    debug_spotify('playing data is null, cancelling cover update')
+
     return removeCover()
   }
 
@@ -74,8 +81,12 @@ const run = async () => {
     const trackId = await getTrackId(artistNames, item.name)
 
     if (trackId !== undefined) {
+      debug_vk(`query "${artistNames} - ${item.name}" is identified as ${trackId}, updating status`)
+
       await setBroadcastingTrack(trackId)
     } else {
+      debug_vk(`query "${artistNames} - ${item.name}" returned no results, cancelling status update`)
+
       await removeBroadcastingTrack()
     }
   }
@@ -84,13 +95,15 @@ const run = async () => {
     ids: artistIds
   })
 
-  const { buffer } = await render({
+  const { buffer, renderTime } = await render({
     width: WIDTH,
     height: HEIGHT,
     scrobbles,
     artists: artists?.artists!, // artists? artists!
     data: currentlyPlayingData!
   })
+
+  debug_renderer(renderTime)
 
   return uploadCover(buffer)
 }
