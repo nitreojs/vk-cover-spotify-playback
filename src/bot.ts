@@ -2,6 +2,7 @@ import 'dotenv/config'
 
 import env from 'env-var'
 
+// @ts-ignore
 import settings from '../settings.json'
 
 import { HEIGHT, WIDTH } from './constants'
@@ -32,20 +33,14 @@ if (settings.use_lastfm && !lastfmDataFound) {
   throw new TypeError('specified `"use_lastfm": true` but either API key or username are missing')
 }
 
-let deletedCover = false
-
 const run = async () => {
   const currentlyPlayingData = await spotify.call<CurrentlyPlayingObject>('me/player/currently-playing')
 
-  if (currentlyPlayingData === null && !deletedCover) {
-    deletedCover = true
-
+  if (currentlyPlayingData === null) {
     return removeCover()
   }
 
   const item = currentlyPlayingData?.item as Track
-
-  deletedCover = false
 
   let scrobbles = 0
 
