@@ -12,7 +12,7 @@ import {
   roundRect
 } from './utils'
 
-FontLibrary.use('SF UI', resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf'))
+FontLibrary.use('SF UI', resolve(__dirname, '..', '..', 'fonts', 'SF UI', '*.otf'))
 
 export interface RenderParams {
   width: number
@@ -40,8 +40,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   const currentlyPlaying = data!
   const item = currentlyPlaying.item
 
-  const trackImage = item.album.images[0]
-  const imageUrl = trackImage.url
+  const imageUrl = item.album.images[0].url
 
   const backgroundImage = await loadImage(imageUrl)
 
