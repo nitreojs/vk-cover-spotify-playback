@@ -32,7 +32,7 @@ export class Spotify {
   }
 
   public async revoke () {
-    const json = (await this._call({
+    const json = await this._call({
       url: 'https://accounts.spotify.com/api/token',
       forceUrl: true,
       headers: {
@@ -44,7 +44,7 @@ export class Spotify {
         grant_type: 'refresh_token',
         refresh_token: this.options.refreshToken
       }
-    })) as Record<string, any>
+    }) as Record<string, any>
 
     this.options.accessToken = json.access_token
   }
@@ -79,18 +79,32 @@ export class Spotify {
 
     const response = await fetch(url, requestParams)
 
+    let error: Error | undefined
+
     try {
       const json = await response.json() as T
 
-      if (json?.error?.status === 401) { // need to revoke the token
+      if (json.error?.status !== 401) {
+        return json
+      }
+
+      // INFO: need to revoke the token
+      if (!json.error.message.startsWith('Invalid')) {
         await this.revoke()
 
         return this._call(params)
       }
 
-      return json
-    } catch (error) { // failed to .json()
+      // INFO: credentials are (probably) invalid
+      error = new TypeError(json.error.message)
+    } catch (error) { // INFO: failed to .json()
       return null
     }
+
+    if (error !== undefined) {
+      throw error
+    }
+
+    return null
   }
 }
