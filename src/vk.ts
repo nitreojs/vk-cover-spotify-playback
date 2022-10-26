@@ -6,7 +6,7 @@ import { HEIGHT, WIDTH } from './constants'
 
 const VK_TOKEN = env.get('VK_TOKEN').required().asString()
 
-const vk = new VK({
+export const vk = new VK({
   token: VK_TOKEN
 })
 
