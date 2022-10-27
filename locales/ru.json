@@ -1,0 +1,29 @@
+{
+  "currently_listening_to": "слушаю сейчас в {{service}}",
+  "services": {
+    "spotify": "Spotify"
+  },
+  "track_name": "{{name}}",
+  "artist_name": "{{name}}",
+  "listened_n_times": "{{n}} {{declension}}",
+  "listening_declensions": {
+    "one": "прослушивание",
+    "few": "прослушивания",
+    "many": "прослушиваний"
+  },
+  "date_format": "{{day}} {{month}} в {{hours}}:{{minutes}}",
+  "months": {
+    "0": "янв",
+    "1": "фев",
+    "2": "мар",
+    "3": "апр",
+    "4": "май",
+    "5": "июн",
+    "6": "июл",
+    "7": "авг",
+    "8": "сен",
+    "9": "окт",
+    "10": "ноя",
+    "11": "дек"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "currently_listening_to": "currently listening to {{service}}",
+  "services": {
+    "spotify": "Spotify"
+  },
+  "track_name": "{{name}}",
+  "artist_name": "{{name}}",
+  "listened_n_times": "listened {{n}} {{declension}}",
+  "listening_declensions": {
+    "one": "time",
+    "other": "times"
+  },
+  "date_format": "{{month}} {{day}} at {{hours}}:{{minutes}}",
+  "months": {
+    "0": "Jan",
+    "1": "Feb",
+    "2": "Mar",
+    "3": "Apr",
+    "4": "May",
+    "5": "Jun",
+    "6": "Jul",
+    "7": "Aug",
+    "8": "Sep",
+    "9": "Oct",
+    "10": "Nov",
+    "11": "Dec"
+  }
+}
