@@ -123,6 +123,10 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
 
   let lastOffsetX = TRACK_TEXT_OFFSET_X
 
+  let trackArtistsWidth = 0
+
+  let TRACK_ARTISTS_MAX_WIDTH = TRACK_TEXT_MAX_WIDTH
+
   context.shadowBlur = 0
   context.shadowColor = 'none'
 
@@ -148,16 +152,6 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
 
     const IMAGE_OFFSET_X = lastOffsetX
     const IMAGE_OFFSET_Y = TRACK_TEXT_OFFSET_Y + 8
-
-    context.shadowColor = 'rgb(0, 0, 0, 0.5)'
-    context.shadowBlur = artistImage.height / 20
-
-    renderRoundRectImage(canvas, artistImage, {
-      dx: IMAGE_OFFSET_X, dy: IMAGE_OFFSET_Y,
-      dw: 64, dh: 64,
-      radius: 8, fill: hasImage
-    })
-
     const TEXT_OFFSET_X = lastOffsetX + 64 + ARTIST_PADDING
     const TEXT_OFFSET_Y = TRACK_TEXT_OFFSET_Y + 12
 
@@ -170,9 +164,36 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
 
     const TEXT_MEASUREMENT = context.measureText(artist.name)
 
+    const currentWidth = 64 + ARTIST_PADDING + TEXT_MEASUREMENT.width
+
+    // INFO: artists line will be too big => '...' + break
+    if (trackArtistsWidth + currentWidth > TRACK_ARTISTS_MAX_WIDTH) {
+      context.fillText('•••', TEXT_OFFSET_X - 64 - ARTIST_PADDING, TEXT_OFFSET_Y)
+
+      break
+    }
+
+    context.shadowColor = 'rgb(0, 0, 0, 0.5)'
+    context.shadowBlur = artistImage.height / 20
+
+    renderRoundRectImage(canvas, artistImage, {
+      dx: IMAGE_OFFSET_X, dy: IMAGE_OFFSET_Y,
+      dw: 64, dh: 64,
+      radius: 8, fill: hasImage
+    })
+
+    context.shadowColor = 'rgb(0, 0, 0, 0.7)'
+    context.shadowBlur = 20
+
     context.fillText(artist.name, TEXT_OFFSET_X, TEXT_OFFSET_Y)
 
     lastOffsetX = TEXT_OFFSET_X + TEXT_MEASUREMENT.width + ARTIST_PADDING * 3
+
+    trackArtistsWidth += (
+      64 + ARTIST_PADDING +    // INFO: avatar
+      TEXT_MEASUREMENT.width + // INFO: artist name
+      ARTIST_PADDING * 3       // INFO: padding
+    )
   }
 
   const TIME_PADDING = 16
