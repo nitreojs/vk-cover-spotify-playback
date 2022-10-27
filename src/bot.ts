@@ -3,9 +3,6 @@ import 'dotenv/config'
 
 import env from 'env-var'
 
-// @ts-ignore
-import settings from '../settings.json'
-
 import { HEIGHT, WIDTH } from './constants'
 
 import { Lastfm, RecentTracks, TrackInfo } from './lastfm'
@@ -25,6 +22,9 @@ const SPOTIFY_REFRESH_TOKEN = env.get('SPOTIFY_REFRESH_TOKEN').required().asStri
 const LASTFM_API_KEY = env.get('LASTFM_API_KEY').asString()
 const LASTFM_USERNAME = env.get('LASTFM_USERNAME').asString()
 
+const USE_LASTFM = env.get('USE_LASTFM').required().asBool()
+const BROADCAST_TRACK_IN_STATUS = env.get('BROADCAST_TRACK_IN_STATUS').required().asBool()
+
 const spotify = new Spotify({
   accessToken: SPOTIFY_ACCESS_TOKEN,
   clientId: SPOTIFY_CLIENT_ID,
@@ -34,7 +34,7 @@ const spotify = new Spotify({
 
 const lastfmDataFound = LASTFM_API_KEY !== undefined && LASTFM_USERNAME !== undefined
 
-if (settings.use_lastfm && !lastfmDataFound) {
+if (USE_LASTFM && !lastfmDataFound) {
   throw new TypeError('specified `"use_lastfm": true` but either API key or username are missing')
 }
 
@@ -79,7 +79,7 @@ const run = async () => {
   const artistNames = item.artists.map(artist => artist.name).join(', ')
 
   // INFO: broadcast track into a status only if the setting is turned on
-  if (settings.broadcast_track_in_vk) {
+  if (BROADCAST_TRACK_IN_STATUS) {
     const trackId = await getTrackId(artistNames, item.name)
 
     debug_vk(`"${artistNames} - ${item.name}", trackId: ${trackId}`)

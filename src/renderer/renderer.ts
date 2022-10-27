@@ -1,8 +1,10 @@
+import env from 'env-var'
+import { I18n } from 'i18n'
 import { resolve } from 'node:path'
 
 import { Canvas, CanvasImageSource, FontLibrary, loadImage } from 'skia-canvas'
 
-import { getDeclination, transformDate, transformTime } from '../utils'
+import { transformDate, transformTime } from '../utils'
 
 import {
   renderBlurredImageBackground,
@@ -13,6 +15,16 @@ import {
 } from './utils'
 
 FontLibrary.use('SF UI', resolve(__dirname, '..', '..', 'fonts', 'SF UI', '*.otf'))
+
+const LOCALE = env.get('LOCALE').required().example('ru').asString()
+
+const i18n = new I18n({
+  directory: resolve(__dirname, '..', '..', 'locales'),
+  objectNotation: true,
+  defaultLocale: 'ru'
+})
+
+i18n.setLocale(LOCALE)
 
 export interface SimpleArtistImage {
   url: string
@@ -89,7 +101,7 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
 
   const TRACK_TEXT_MAX_WIDTH = canvas.width - TRACK_TEXT_OFFSET_X - IMAGE_OFFSET
 
-  let TRACK_TEXT = trackName
+  let TRACK_TEXT = i18n.__('track_name', { name: trackName })
 
   const FONT_SIZE = 24 * widthMultiplier
 
@@ -162,7 +174,9 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
     context.textAlign = 'left'
     context.textBaseline = 'top'
 
-    const TEXT_MEASUREMENT = context.measureText(artist.name)
+    const ARTIST_NAME = i18n.__('artist_name', { name: artist.name })
+
+    const TEXT_MEASUREMENT = context.measureText(ARTIST_NAME)
 
     const currentWidth = 64 + ARTIST_PADDING + TEXT_MEASUREMENT.width
 
@@ -185,7 +199,7 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
     context.shadowColor = 'rgb(0, 0, 0, 0.7)'
     context.shadowBlur = 20
 
-    context.fillText(artist.name, TEXT_OFFSET_X, TEXT_OFFSET_Y)
+    context.fillText(ARTIST_NAME, TEXT_OFFSET_X, TEXT_OFFSET_Y)
 
     lastOffsetX = TEXT_OFFSET_X + TEXT_MEASUREMENT.width + ARTIST_PADDING * 3
 
@@ -210,12 +224,17 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
   context.textBaseline = 'top'
 
   const ADDITIONAL_TEXT_PARTS: string[] = [
-    'слушаю сейчас в Spotify',
+    i18n.__('currently_listening_to', { service: i18n.__('services.spotify') }),
     transformDate(new Date())
   ]
 
   if (scrobbles > 0) {
-    ADDITIONAL_TEXT_PARTS.push(`${scrobbles} ${getDeclination(scrobbles, ['прослушивание', 'прослушивания', 'прослушиваний'])}`)
+    ADDITIONAL_TEXT_PARTS.push(
+      i18n.__('listened_n_times', {
+        n: scrobbles.toString(),
+        declension: i18n.__n('listening_declensions', scrobbles)
+      })
+    )
   }
 
   const ADDITIONAL_TEXT = ADDITIONAL_TEXT_PARTS.join(' • ')

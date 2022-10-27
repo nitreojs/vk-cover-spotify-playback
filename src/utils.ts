@@ -1,3 +1,18 @@
+import env from 'env-var'
+
+import { I18n } from 'i18n'
+import { resolve } from 'node:path'
+
+const LOCALE = env.get('LOCALE').required().example('ru').asString()
+
+const i18n = new I18n({
+  directory: resolve(__dirname, '..', 'locales'),
+  objectNotation: true,
+  defaultLocale: 'ru'
+})
+
+i18n.setLocale(LOCALE)
+
 export const transformTime = (ms: number) => {
   let seconds = Math.round(ms / 1000)
   const minutes = Math.floor(seconds / 60)
@@ -11,16 +26,16 @@ export const pad = (value: any) => String(value).padStart(2, '0')
 
 export const transformDate = (date: Date) => {
   const day = pad(date.getDate())
-  const month = pad(date.getMonth() + 1)
-  const year = date.getFullYear()
-
   const hours = pad(date.getHours())
   const minutes = pad(date.getMinutes())
 
-  return `${day}.${month}.${year} ${hours}:${minutes}`
+  const monthIndex = date.getMonth()
+  const month = i18n.__(`months.${monthIndex}`)
+
+  return i18n.__('date_format', { day, month, hours, minutes })
 }
 
-export const getDeclination = (n: number, forms: [string, string, string]) => {
+export const getDeclension = (n: number, forms: [string, string, string]) => {
   const pr = new Intl.PluralRules('ru-RU')
   const rule = pr.select(n)
 
