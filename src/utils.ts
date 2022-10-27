@@ -34,18 +34,3 @@ export const transformDate = (date: Date) => {
 
   return i18n.__('date_format', { day, month, hours, minutes })
 }
-
-export const getDeclension = (n: number, forms: [string, string, string]) => {
-  const pr = new Intl.PluralRules('ru-RU')
-  const rule = pr.select(n)
-
-  if (rule === 'one') {
-    return forms[0]
-  }
-
-  if (rule === 'few') {
-    return forms[1]
-  }
-
-  return forms[2]
-}
