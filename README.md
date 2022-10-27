@@ -62,6 +62,14 @@ you will need to rename it to `.env` and fill that file before running the proje
 2. paste it into `LASTFM_API_KEY`
 3. insert your lastfm username into `LASTFM_USERNAME`
 
+### other `.env` variables
+
+there are also some variables that we didn't talk about. these are:
+
+- `LOCALE`: indicates what `.json` file from `locales/` folder to use;
+- `USE_LASTFM`: `true` if you are going to use Lastfm, `false` otherwise;
+- `BROADCAST_TRACK_IN_STATUS`: `true` if you are going to broadcast your currently playing track in your VK status.
+
 ## fonts
 
 if you open `src/renderer.ts` file and go to line 7, you will see that this script requires
@@ -73,14 +81,6 @@ to find them, proceed to do next steps
 3. paste `.otf` files in here
 
 if you are going to use `.ttf` files then you will have to edit line 7 in `src/renderer.ts` file
-
-## `settings.json`
-
-there is a `settings.json` file in the root folder, it tells the script whether you want to enable or disable some
-features.
-
-- `use_lastfm`: `true` if you want to render scrobbles, `false` otherwise. default: `true`;
-- `broadcast_track_in_vk`: `true` if you are want to broadcast currently playing track in your status. default: `false`.
 
 ## running script
 
