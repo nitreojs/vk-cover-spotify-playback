@@ -14,13 +14,27 @@ import {
 
 FontLibrary.use('SF UI', resolve(__dirname, '..', '..', 'fonts', 'SF UI', '*.otf'))
 
+export interface SimpleArtistImage {
+  url: string
+}
+
+export interface SimpleArtist {
+  name: string
+  images: SimpleArtistImage[]
+}
+
 export interface RenderParams {
   width: number
   height: number
   scrobbles: number
 
-  data: Record<string, any>
-  artists: Record<string, any>[]
+  imageUrl: string
+  progress: number
+
+  trackName: string
+  trackDuration: number
+
+  artists: SimpleArtist[]
 }
 
 export interface RenderResponseRenderTime {
@@ -33,14 +47,11 @@ export interface RenderResponse {
   renderTime: RenderResponseRenderTime
 }
 
-export const render = async ({ data, width, height, scrobbles, artists }: RenderParams): Promise<RenderResponse> => {
+export const render = async (params: RenderParams): Promise<RenderResponse> => {
+  const { width, height, scrobbles, artists, imageUrl, trackName, progress, trackDuration } = params
+
   const canvas = new Canvas(width, height)
   const context = canvas.getContext('2d')
-
-  const currentlyPlaying = data!
-  const item = currentlyPlaying.item
-
-  const imageUrl = item.album.images[0].url
 
   const backgroundImage = await loadImage(imageUrl)
 
@@ -78,7 +89,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
 
   const TRACK_TEXT_MAX_WIDTH = canvas.width - TRACK_TEXT_OFFSET_X - IMAGE_OFFSET
 
-  let TRACK_TEXT = item.name
+  let TRACK_TEXT = trackName
 
   const FONT_SIZE = 24 * widthMultiplier
 
@@ -202,7 +213,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   context.textAlign = 'left'
   context.textBaseline = 'bottom'
 
-  const TIME_ELAPSED_TEXT = transformTime(currentlyPlaying.progress_ms!)
+  const TIME_ELAPSED_TEXT = transformTime(progress)
   const TIME_ELAPSED_TEXT_MEASUREMENT = context.measureText(TIME_ELAPSED_TEXT)
 
   context.fillText(TIME_ELAPSED_TEXT, TIME_ELAPSED_OFFSET_X, TIME_ELAPSED_OFFSET_Y)
@@ -218,7 +229,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   context.textAlign = 'right'
   context.textBaseline = 'bottom'
 
-  const TIME_LEFT_TEXT = `-${transformTime(item.duration_ms - currentlyPlaying.progress_ms!)}`
+  const TIME_LEFT_TEXT = `-${transformTime(trackDuration - progress)}`
   const TIME_LEFT_TEXT_MEASUREMENT = context.measureText(TIME_LEFT_TEXT)
 
   context.fillText(TIME_LEFT_TEXT, TIME_LEFT_OFFSET_X, TIME_LEFT_OFFSET_Y)
@@ -240,7 +251,7 @@ export const render = async ({ data, width, height, scrobbles, artists }: Render
   })
 
   /// INFO: progress line (elapsed)
-  const PROGRESS = currentlyPlaying.progress_ms! / item.duration_ms * PROGRESS_LINE_FULL_WIDTH
+  const PROGRESS = progress / trackDuration * PROGRESS_LINE_FULL_WIDTH
 
   context.shadowColor = 'rgb(0, 0, 0, 0)'
   context.shadowBlur = 0

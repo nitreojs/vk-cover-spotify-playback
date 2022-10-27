@@ -41,13 +41,15 @@ if (settings.use_lastfm && !lastfmDataFound) {
 const run = async () => {
   const currentlyPlayingData = await spotify.call<CurrentlyPlayingObject>('me/player/currently-playing')
 
+  debug_spotify('currently playing data', currentlyPlayingData)
+
   if (currentlyPlayingData === null) {
     debug_spotify('playing data is null, cancelling cover update')
 
     return removeCover()
   }
 
-  const item = currentlyPlayingData?.item as Track
+  const item = currentlyPlayingData.item as Track
 
   let scrobbles = 0
 
@@ -80,13 +82,11 @@ const run = async () => {
   if (settings.broadcast_track_in_vk) {
     const trackId = await getTrackId(artistNames, item.name)
 
-    if (trackId !== undefined) {
-      debug_vk(`query "${artistNames} - ${item.name}" is identified as ${trackId}, updating status`)
+    debug_vk(`"${artistNames} - ${item.name}", trackId: ${trackId}`)
 
+    if (trackId !== undefined) {
       await setBroadcastingTrack(trackId)
     } else {
-      debug_vk(`query "${artistNames} - ${item.name}" returned no results, cancelling status update`)
-
       await removeBroadcastingTrack()
     }
   }
@@ -99,8 +99,14 @@ const run = async () => {
     width: WIDTH,
     height: HEIGHT,
     scrobbles,
-    artists: artists?.artists!, // artists? artists!
-    data: currentlyPlayingData!
+
+    imageUrl: item.album.images[0].url,
+    progress: currentlyPlayingData.progress_ms!,
+
+    trackName: item.name,
+    trackDuration: item.duration_ms,
+
+    artists: artists?.artists! // artists? artists!
   })
 
   debug_renderer(renderTime)
