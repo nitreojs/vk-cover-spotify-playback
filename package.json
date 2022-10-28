@@ -1,6 +1,6 @@
 {
   "name": "vk-cover-spotify-playback",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "main": "dist/bot.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
