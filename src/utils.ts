@@ -1,17 +1,16 @@
-import env from 'env-var'
+import { I18n } from '@starkow/i18n'
 
-import { I18n } from 'i18n'
+import env from 'env-var'
 import { resolve } from 'node:path'
 
 const LOCALE = env.get('LOCALE').required().example('ru').asString()
 
 const i18n = new I18n({
-  directory: resolve(__dirname, '..', 'locales'),
-  objectNotation: true,
+  localesPath: resolve(__dirname, '..', 'locales'),
   defaultLocale: 'ru'
 })
 
-i18n.setLocale(LOCALE)
+i18n.locale = LOCALE
 
 export const transformTime = (ms: number) => {
   let seconds = Math.round(ms / 1000)

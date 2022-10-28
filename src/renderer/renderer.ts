@@ -1,5 +1,6 @@
+import { I18n } from '@starkow/i18n'
+
 import env from 'env-var'
-import { I18n } from 'i18n'
 import { resolve } from 'node:path'
 
 import { Canvas, CanvasImageSource, FontLibrary, loadImage } from 'skia-canvas'
@@ -19,12 +20,11 @@ FontLibrary.use('SF UI', resolve(__dirname, '..', '..', 'fonts', 'SF UI', '*.otf
 const LOCALE = env.get('LOCALE').required().example('ru').asString()
 
 const i18n = new I18n({
-  directory: resolve(__dirname, '..', '..', 'locales'),
-  objectNotation: true,
+  localesPath: resolve(__dirname, '..', '..', 'locales'),
   defaultLocale: 'ru'
 })
 
-i18n.setLocale(LOCALE)
+i18n.locale = LOCALE
 
 export interface SimpleArtistImage {
   url: string
@@ -232,7 +232,7 @@ export const render = async (params: RenderParams): Promise<RenderResponse> => {
     ADDITIONAL_TEXT_PARTS.push(
       i18n.__('listened_n_times', {
         n: scrobbles.toString(),
-        declension: i18n.__n('listening_declensions', scrobbles)
+        declension: i18n.__n(scrobbles, 'listening_declensions')
       })
     )
   }
